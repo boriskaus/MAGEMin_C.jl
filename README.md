@@ -1,10 +1,9 @@
 # MAGEMin_C.jl
 
-[![Build Status](https://github.com/ComputationalThermodynamics/MAGEMin_C.jl/workflows/CI/badge.svg)](https://github.com/ComputationalThermodynamics/MAGEMin_C.jl/actions)
-[![DOI](https://zenodo.org/badge/489304972.svg)](https://zenodo.org/doi/10.5281/zenodo.10212322)
 
-Julia interface to the MAGEMin C package, which performs thermodynamic equilibrium calculations.
-See the [MAGEMin](https://github.com/ComputationalThermodynamics/MAGEMin) page for more details on the package & how to use it.
+> [!CAUTION]
+> This is the local development version of MAGEMin_C by Boris. Most users are probably only interested in the relesed version of the code, which you can find [here](https://github.com/ComputationalThermodynamics/MAGEMin_C.jl) instead.  
+
 
 ## Using the julia interface
 First install julia. We recommend downloading the official binary from the [julia](julialang.org) webpage.
@@ -12,7 +11,7 @@ First install julia. We recommend downloading the official binary from the [juli
 Next, install the `MAGEMin_C` package with:
 ```julia
 julia> ]
-pkg> add MAGEMin_C
+pkg> add https://github.com/boriskaus/MAGEMin_C.jl
 ```
 You can check if it works on your system by running the build-in test suite:
 ```julia
