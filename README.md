@@ -2,7 +2,7 @@
 
 
 > [!CAUTION]
-> This is the local development version of MAGEMin_C by Boris. Most users are probably only interested in the relesed version of the code, which you can find [here](https://github.com/ComputationalThermodynamics/MAGEMin_C.jl) instead.  
+> This is the local development version of MAGEMin_C by Boris. Most users are probably only interested in officially the released version of the code, which you can find [here](https://github.com/ComputationalThermodynamics/MAGEMin_C.jl) instead.  
 
 
 ## Using the julia interface
@@ -18,6 +18,9 @@ You can check if it works on your system by running the build-in test suite:
 pkg> test MAGEMin_C
 ```
 
+> [!WARNING]
+> As this is the development version, not all tests will pass. 
+
 By pushing `backspace` you return from the package manager to the main julia terminal. This will download a compiled version of the library as well as some wrapper functions to your system.
 
 Next, you can do calculations with:
@@ -32,18 +35,18 @@ julia> data = use_predefined_bulk_rock(data, test);
 julia> P    = 8.0;
 julia> T    = 800.0;
 julia> out  = point_wise_minimization(P,T, data);
- Status             :            0
- Mass residual      : +8.03033e-06
- Rank               :            0
- Point              :            1
- Temperature        :   +800.00000       [C]
+ Status             :            0 
+ Mass residual      : +7.81220e-06
+ Rank               :            0 
+ Point              :            1 
+ Temperature        :   +800.00000       [C] 
  Pressure           :     +8.00000       [kbar]
 
- SOL = [G: -797.749] (26 iterations, 40.98 ms)
- GAM = [-979.481479,-1774.104933,-795.260896,-673.747606,-375.066863,-917.567179,-829.994361,-1023.642804,-257.017193,-1308.294760]
+ SOL = [G: -797.772] (26 iterations, 40.51 ms)
+ GAM = [-979.332401,-1774.517815,-795.446831,-673.822884,-375.051876,-920.382309,-830.531600,-1027.480560,-258.780857,-1330.110569]
 
- Phase :      opx       ol      cpx      spn
- Mode  :  0.24229  0.58808  0.14165  0.02798
+ Phase :      opx       ol      cpx      spn 
+ Mode  :  0.23894  0.58430  0.14500  0.03176 
 ```
 
 ### Example 2 - custom composition
@@ -57,29 +60,29 @@ julia> X       = [48.43; 15.19; 11.57; 10.13; 6.65; 1.64; 0.59; 1.87; 0.68; 0.0;
 julia> sys_in  = "wt"
 julia> out     = single_point_minimization(P, T, data, X=X, Xoxides=Xoxides, sys_in=sys_in)
 Pressure          : 10.0      [kbar]
-Temperature       : 1100.0    [Celsius]
+Temperature       : 1100.0    [Celcius]
      Stable phase | Fraction (mol 1 atom basis) 
-              liq   0.73698 
-              cpx   0.17241 
-             pl4T   0.04846 
+              opx   0.01905 
+              cpx   0.22844 
+              liq   0.75253 
      Stable phase | Fraction (wt fraction) 
-              liq   0.70765 
-              cpx   0.18894 
-             pl4T   0.05083 
-Gibbs free energy : -907.392253  (22 iterations; 62.25 ms)
-Oxygen fugacity          : 3.400537515666476e-9
+              opx   0.02015 
+              cpx   0.24913 
+              liq   0.73077 
+Gibbs free energy : -916.867769  (34 iterations; 54.57 ms)
+Oxygen fugacity          : 6.690998144597181e-9
 ```
 
 After the calculation is finished, the structure `out` holds all the information about the stable assemblage, including seismic velocities, melt content, melt chemistry, densities etc.
 You can show a full overview of that with
 ```julia
-julia> print_info(out[1])
+julia> print_info(out)
 ```
 If you are interested in the density or seismic velocity at the point, access it with
 ```julia
-julia> out[1].rho
+julia> out.rho
 3144.282577840362
-julia> out[1].Vp
+julia> out.Vp
 5.919986959559542
 ```
 Once you are done with all calculations, release the memory with
