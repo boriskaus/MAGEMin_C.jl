@@ -597,13 +597,11 @@ mutable struct global_variables
     maxgmTime::Cdouble
     ineq_res::Cdouble
     obj_tol::Cdouble
-    box_size_mode_1::Cdouble
+    box_size_mode_PGE::Cdouble
     box_size_mode_LP::Cdouble
     maxeval::Cint
-    maxeval_mode_1::Cint
     bnd_val::Cdouble
     obj_refine_fac::Cdouble
-    backUpNLopt::Cint
     A_PGE::Ptr{Cdouble}
     A0_PGE::Ptr{Cdouble}
     b_PGE::Ptr{Cdouble}
@@ -619,7 +617,6 @@ mutable struct global_variables
     n_cp_phase::Cint
     max_n_phase::Cdouble
     max_g_phase::Cdouble
-    br_liq_x::Cdouble
     max_fac::Cdouble
     it_1::Cint
     ur_1::Cdouble
@@ -783,7 +780,6 @@ struct SS_refs
     EM_list::Ptr{Ptr{Cchar}}
     CV_list::Ptr{Ptr{Cchar}}
     ss_flags::Ptr{Cint}
-    CstFactor::Cint
     n_pc::Cint
     tot_pc::Cint
     id_pc::Cint
@@ -792,7 +788,6 @@ struct SS_refs
     DF_pc::Ptr{Cdouble}
     comp_pc::Ptr{Ptr{Cdouble}}
     p_pc::Ptr{Ptr{Cdouble}}
-    mu_pc::Ptr{Ptr{Cdouble}}
     xeos_pc::Ptr{Ptr{Cdouble}}
     factor_pc::Ptr{Cdouble}
     n_Ppc::Cint
@@ -807,7 +802,6 @@ struct SS_refs
     xeos_Ppc::Ptr{Ptr{Cdouble}}
     factor_Ppc::Ptr{Cdouble}
     solvus_id::Ptr{Cint}
-    min_mode::Cint
     is_liq::Cint
     symmetry::Cint
     n_em::Cint
@@ -1136,8 +1130,8 @@ function InitializeDatabases(gv, EM_database)
     ccall((:InitializeDatabases, libMAGEMin), Databases, (global_variable, Cint), gv, EM_database)
 end
 
-function FreeDatabases(gv, DB)
-    ccall((:FreeDatabases, libMAGEMin), Cvoid, (global_variable, Databases), gv, DB)
+function FreeDatabases(gv, DB, z_b)
+    ccall((:FreeDatabases, libMAGEMin), Cvoid, (global_variable, Databases, bulk_info), gv, DB, z_b)
 end
 
 function ComputeG0_point(EM_database, z_b, gv, PP_ref_db, SS_ref_db)
@@ -1453,10 +1447,10 @@ mutable struct igneous_datasets
     n_ss::Cint
     ox::NTuple{11, NTuple{20, Cchar}}
     PP::NTuple{17, NTuple{20, Cchar}}
-    SS::NTuple{14, NTuple{20, Cchar}}
-    verifyPC::NTuple{14, Cint}
-    n_SS_PC::NTuple{14, Cint}
-    SS_PC_stp::NTuple{14, Cdouble}
+    SS::NTuple{15, NTuple{20, Cchar}}
+    verifyPC::NTuple{15, Cint}
+    n_SS_PC::NTuple{15, Cint}
+    SS_PC_stp::NTuple{15, Cdouble}
     PC_df_add::Cdouble
     solver_switch_T::Cdouble
     min_melt_T::Cdouble
@@ -1471,6 +1465,32 @@ mutable struct igneous_datasets
 end
 
 const igneous_dataset = igneous_datasets
+
+mutable struct igneouse_datasets
+    n_em_db::Cint
+    n_ox::Cint
+    n_pp::Cint
+    n_ss::Cint
+    ox::NTuple{11, NTuple{20, Cchar}}
+    PP::NTuple{18, NTuple{20, Cchar}}
+    SS::NTuple{21, NTuple{20, Cchar}}
+    verifyPC::NTuple{21, Cint}
+    n_SS_PC::NTuple{21, Cint}
+    SS_PC_stp::NTuple{21, Cdouble}
+    PC_df_add::Cdouble
+    solver_switch_T::Cdouble
+    min_melt_T::Cdouble
+    inner_PGE_ite::Cdouble
+    max_n_phase::Cdouble
+    max_g_phase::Cdouble
+    max_fac::Cdouble
+    merge_value::Cdouble
+    re_in_n::Cdouble
+    obj_tol::Cdouble
+    igneouse_datasets() = new()
+end
+
+const igneouse_dataset = igneouse_datasets
 
 mutable struct igneousd_datasets
     n_em_db::Cint
@@ -1592,18 +1612,6 @@ end
 
 function read_in_data(gv, input_data, n_points)
     ccall((:read_in_data, libMAGEMin), Cvoid, (global_variable, Ptr{io_data}, Cint), gv, input_data, n_points)
-end
-
-function AddResults_output_struct(gv, z_b, P, T, DB, output)
-    ccall((:AddResults_output_struct, libMAGEMin), Cvoid, (global_variable, bulk_info, Cdouble, Cdouble, Databases, out_data), gv, z_b, P, T, DB, output)
-end
-
-function InitializeOutput(gv, DB)
-    ccall((:InitializeOutput, libMAGEMin), out_data, (global_variable, Databases), gv, DB)
-end
-
-function FreeOutput(output)
-    ccall((:FreeOutput, libMAGEMin), Cvoid, (out_data,), output)
 end
 
 mutable struct ketopt_t
@@ -1906,6 +1914,30 @@ end
 
 function p2x_ig_spn(SS_ref_db, eps)
     ccall((:p2x_ig_spn, libMAGEMin), Cvoid, (SS_ref, Cdouble), SS_ref_db, eps)
+end
+
+function p2x_ig_ma(SS_ref_db, eps)
+    ccall((:p2x_ig_ma, libMAGEMin), Cvoid, (SS_ref, Cdouble), SS_ref_db, eps)
+end
+
+function p2x_ig_chl(SS_ref_db, eps)
+    ccall((:p2x_ig_chl, libMAGEMin), Cvoid, (SS_ref, Cdouble), SS_ref_db, eps)
+end
+
+function p2x_ig_ctd(SS_ref_db, eps)
+    ccall((:p2x_ig_ctd, libMAGEMin), Cvoid, (SS_ref, Cdouble), SS_ref_db, eps)
+end
+
+function p2x_ig_car(SS_ref_db, eps)
+    ccall((:p2x_ig_car, libMAGEMin), Cvoid, (SS_ref, Cdouble), SS_ref_db, eps)
+end
+
+function p2x_ig_ta(SS_ref_db, eps)
+    ccall((:p2x_ig_ta, libMAGEMin), Cvoid, (SS_ref, Cdouble), SS_ref_db, eps)
+end
+
+function p2x_ig_zoi(SS_ref_db, eps)
+    ccall((:p2x_ig_zoi, libMAGEMin), Cvoid, (SS_ref, Cdouble), SS_ref_db, eps)
 end
 
 function p2x_mp_liq(SS_ref_db, eps)
@@ -2280,6 +2312,30 @@ function obj_ig_spn(n, x, grad, SS_ref_db)
     ccall((:obj_ig_spn, libMAGEMin), Cdouble, (Cuint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cvoid}), n, x, grad, SS_ref_db)
 end
 
+function obj_ig_ma(n, x, grad, SS_ref_db)
+    ccall((:obj_ig_ma, libMAGEMin), Cdouble, (Cuint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cvoid}), n, x, grad, SS_ref_db)
+end
+
+function obj_ig_chl(n, x, grad, SS_ref_db)
+    ccall((:obj_ig_chl, libMAGEMin), Cdouble, (Cuint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cvoid}), n, x, grad, SS_ref_db)
+end
+
+function obj_ig_ctd(n, x, grad, SS_ref_db)
+    ccall((:obj_ig_ctd, libMAGEMin), Cdouble, (Cuint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cvoid}), n, x, grad, SS_ref_db)
+end
+
+function obj_ig_car(n, x, grad, SS_ref_db)
+    ccall((:obj_ig_car, libMAGEMin), Cdouble, (Cuint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cvoid}), n, x, grad, SS_ref_db)
+end
+
+function obj_ig_ta(n, x, grad, SS_ref_db)
+    ccall((:obj_ig_ta, libMAGEMin), Cdouble, (Cuint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cvoid}), n, x, grad, SS_ref_db)
+end
+
+function obj_ig_zoi(n, x, grad, SS_ref_db)
+    ccall((:obj_ig_zoi, libMAGEMin), Cdouble, (Cuint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cvoid}), n, x, grad, SS_ref_db)
+end
+
 function obj_mp_liq(n, x, grad, SS_ref_db)
     ccall((:obj_mp_liq, libMAGEMin), Cdouble, (Cuint, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cvoid}), n, x, grad, SS_ref_db)
 end
@@ -2514,12 +2570,12 @@ function init_PGE_from_LP(gv, SS_objective, z_b, SS_ref_db, cp)
     ccall((:init_PGE_from_LP, libMAGEMin), Cvoid, (global_variable, Ptr{obj_type}, bulk_info, Ptr{SS_ref}, Ptr{csd_phase_set}), gv, SS_objective, z_b, SS_ref_db, cp)
 end
 
-function ss_min_PGE(mode, gv, SS_objective, z_b, SS_ref_db, cp)
-    ccall((:ss_min_PGE, libMAGEMin), Cvoid, (Cint, global_variable, Ptr{obj_type}, bulk_info, Ptr{SS_ref}, Ptr{csd_phase_set}), mode, gv, SS_objective, z_b, SS_ref_db, cp)
+function ss_min_PGE(gv, SS_objective, z_b, SS_ref_db, cp)
+    ccall((:ss_min_PGE, libMAGEMin), Cvoid, (global_variable, Ptr{obj_type}, bulk_info, Ptr{SS_ref}, Ptr{csd_phase_set}), gv, SS_objective, z_b, SS_ref_db, cp)
 end
 
-function ss_min_LP(mode, gv, SS_objective, z_b, SS_ref_db, cp)
-    ccall((:ss_min_LP, libMAGEMin), Cvoid, (Cint, global_variable, Ptr{obj_type}, bulk_info, Ptr{SS_ref}, Ptr{csd_phase_set}), mode, gv, SS_objective, z_b, SS_ref_db, cp)
+function ss_min_LP(gv, SS_objective, z_b, SS_ref_db, cp)
+    ccall((:ss_min_LP, libMAGEMin), Cvoid, (global_variable, Ptr{obj_type}, bulk_info, Ptr{SS_ref}, Ptr{csd_phase_set}), gv, SS_objective, z_b, SS_ref_db, cp)
 end
 
 function copy_to_cp(i, ph_id, gv, SS_ref_db, cp)
@@ -2540,30 +2596,6 @@ end
 
 function convert_system_comp(gv, sys_in, z_b)
     ccall((:convert_system_comp, libMAGEMin), Cvoid, (global_variable, Ptr{Cchar}, bulk_info), gv, sys_in, z_b)
-end
-
-function _DCDCT_fct(id, result, A, n_act_sf, n_xeos)
-    ccall((:_DCDCT_fct, libMAGEMin), Cvoid, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Ptr{Cdouble}}, Cint, Cint), id, result, A, n_act_sf, n_xeos)
-end
-
-function _DC_Null_fct(id, result, A, B, n_xeos, n_act_sf)
-    ccall((:_DC_Null_fct, libMAGEMin), Cvoid, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Ptr{Cdouble}}, Ptr{Cdouble}, Cint, Cint), id, result, A, B, n_xeos, n_act_sf)
-end
-
-function _Epsilon_C_fct(id, result, A, b, n_xeos, n_sf)
-    ccall((:_Epsilon_C_fct, libMAGEMin), Cvoid, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cint, Cint), id, result, A, b, n_xeos, n_sf)
-end
-
-function _Epsilon_J_fct(result, A, b, n_xeos)
-    ccall((:_Epsilon_J_fct, libMAGEMin), Cvoid, (Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Cint), result, A, b, n_xeos)
-end
-
-function _I_DC_Null_fct(id, result, A, B, eye, n_act_sf, n_xeos)
-    ccall((:_I_DC_Null_fct, libMAGEMin), Cvoid, (Ptr{Cint}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Ptr{Cdouble}}, Ptr{Cdouble}, Cint, Cint), id, result, A, B, eye, n_act_sf, n_xeos)
-end
-
-function _FillEyeMatrix(A, n)
-    ccall((:_FillEyeMatrix, libMAGEMin), Cvoid, (Ptr{Cdouble}, Cint), A, n)
 end
 
 function get_act_sf_id(result, A, n)
@@ -2682,31 +2714,6 @@ function check_SS_bounds(gv, SS_ref_db)
     ccall((:check_SS_bounds, libMAGEMin), SS_ref, (global_variable, SS_ref), gv, SS_ref_db)
 end
 
-mutable struct TMatrix
-    m::Ptr{Ptr{Cdouble}}
-    nRows::Cint
-    nCols::Cint
-    TMatrix() = new()
-end
-
-const TMATRIX = TMatrix
-
-function createMatrix(nRows, nCols)
-    ccall((:createMatrix, libMAGEMin), TMATRIX, (Cint, Cint), nRows, nCols)
-end
-
-function rref(stoeMat, pivot, tolerance)
-    ccall((:rref, libMAGEMin), TMATRIX, (TMATRIX, Ptr{Cint}, Cdouble), stoeMat, pivot, tolerance)
-end
-
-function freeMatrix(oMatrix)
-    ccall((:freeMatrix, libMAGEMin), Cvoid, (TMATRIX,), oMatrix)
-end
-
-function cleanUpMatrix(stoeMat, tolerance)
-    ccall((:cleanUpMatrix, libMAGEMin), Cvoid, (TMATRIX, Cdouble), stoeMat, tolerance)
-end
-
 function get_pp_id(gv)
     ccall((:get_pp_id, libMAGEMin), global_variable, (global_variable,), gv)
 end
@@ -2721,10 +2728,6 @@ end
 
 function anelastic_correction(water, Vs0, P, T)
     ccall((:anelastic_correction, libMAGEMin), Cdouble, (Cint, Cdouble, Cdouble, Cdouble), water, Vs0, P, T)
-end
-
-function get_sol_phase_infos(input_data, z_b, gv, PP_ref_db, SS_ref_db, cp)
-    ccall((:get_sol_phase_infos, libMAGEMin), global_variable, (io_data, bulk_info, global_variable, Ptr{PP_ref}, Ptr{SS_ref}, Ptr{csd_phase_set}), input_data, z_b, gv, PP_ref_db, SS_ref_db, cp)
 end
 
 function compute_phase_mol_fraction(gv, PP_ref_db, SS_ref_db, cp)

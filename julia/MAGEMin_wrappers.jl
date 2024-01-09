@@ -78,14 +78,13 @@ Finalizes MAGEMin and clears variables
 """
 function Finalize_MAGEMin(dat::MAGEMin_Data)
     for id in 1:Threads.nthreads()
-        gv = dat.gv[id]
-        DB = dat.DB[id]
-        LibMAGEMin.FreeDatabases(gv, DB)
+
+        LibMAGEMin.FreeDatabases(dat.gv[id], dat.DB[id], dat.z_b[id])
 
         # These are indeed not freed yet (same with C-code), which should be added for completion
         # They are rather small structs compared to the others
-        z_b = dat.z_b[id]
-        splx_data = dat.splx_data[id]
+        # z_b = dat.z_b[id]
+        # splx_data = dat.splx_data[id]
 
      end
      return nothing
@@ -113,6 +112,8 @@ function  init_MAGEMin(db="ig"; verbose=0, mbCpx=0, limitCaOpx=0, CaOpxLim=1.0, 
         gv.EM_database = 0
     elseif db == "igd"
         gv.EM_database = 3
+    elseif db == "ige"
+        gv.EM_database = 5
     elseif db == "alk"
         gv.EM_database = 6
     elseif db == "um"
@@ -141,8 +142,8 @@ end
     finalize_MAGEMin(gv,DB)
 Cleans up the memory 
 """
-function  finalize_MAGEMin(gv,DB)
-    LibMAGEMin.FreeDatabases(gv, DB)
+function  finalize_MAGEMin(gv,DB, z_b)
+    LibMAGEMin.FreeDatabases(gv, DB, z_b)
     nothing
 end
 
@@ -320,7 +321,7 @@ function multi_point_minimization(  P::Vector{_T},
 
     # compute a new point using a ccall
     if isnothing(B)
-        out         = point_wise_minimization(P[i], T[i], gv, z_b, DB, splx_data)
+        out         = point_wise_minimization(P[i], T[i], gv, z_b, DB, splx_data) 
     else
         out         = point_wise_minimization(P[i], T[i], gv, z_b, DB, splx_data; buffer_n = B[i])
     end
@@ -350,6 +351,10 @@ function use_predefined_bulk_rock(gv, test=0, db="ig")
         gv = LibMAGEMin.get_bulk_igneous(gv)
         LibMAGEMin.norm_array(gv.bulk_rock, gv.len_ox)
     elseif db == "igd"
+        gv.test = test
+        gv = LibMAGEMin.get_bulk_igneous(gv)
+        LibMAGEMin.norm_array(gv.bulk_rock, gv.len_ox)
+    elseif db == "ige"
         gv.test = test
         gv = LibMAGEMin.get_bulk_igneous(gv)
         LibMAGEMin.norm_array(gv.bulk_rock, gv.len_ox)
@@ -419,6 +424,8 @@ function convertBulk4MAGEMin(bulk_in::Vector{Float64},bulk_in_ox::Vector{String}
 	    MAGEMin_ox      = ["SiO2"; "Al2O3"; "CaO"; "MgO"; "FeO"; "K2O"; "Na2O"; "TiO2"; "O"; "Cr2O3"; "H2O"];
     elseif db == "igd"
         MAGEMin_ox      = ["SiO2"; "Al2O3"; "CaO"; "MgO"; "FeO"; "K2O"; "Na2O"; "TiO2"; "O"; "Cr2O3"; "H2O"];      
+    elseif db == "ige"
+        MAGEMin_ox      = ["SiO2"; "Al2O3"; "CaO"; "MgO"; "FeO"; "K2O"; "Na2O"; "TiO2"; "O"; "Cr2O3"; "H2O"];   
     elseif db == "alk"
         MAGEMin_ox      = ["SiO2"; "Al2O3"; "CaO"; "MgO"; "FeO"; "K2O"; "Na2O"; "TiO2"; "O"; "Cr2O3"; "H2O"];    
     elseif db == "mb"
@@ -465,7 +472,7 @@ function convertBulk4MAGEMin(bulk_in::Vector{Float64},bulk_in_ox::Vector{String}
 
     # check which component can safely be put to 0.0
     idNonH2O = findall(MAGEMin_ox .!= "H2O");
-    if db == "ig" || db == "igd" ||  db == "alk"
+    if db == "ig" || db == "igd" || db == "ige" ||  db == "alk"
         idNonCr2O3  = findall(MAGEMin_ox .!= "Cr2O3");
         idNonTiO2   = findall(MAGEMin_ox .!= "TiO2");
         idNonO      = findall(MAGEMin_ox .!= "O");
@@ -592,7 +599,7 @@ function point_wise_minimization(P::Float64,T::Float64, gv, z_b, DB, splx_data; 
     # Transform results to a more convenient julia struct
     out = create_gmin_struct(DB, gv, time);
     
-    # LibMAGEMin.FreeDatabases(gv, DB);
+    # LibMAGEMin.FreeDatabases(gv, DB, z_b);
 
     return out
 end
@@ -658,7 +665,7 @@ function pwm_run(gv, z_b, DB, splx_data)
     # Transform results to a more convenient julia struct
     out = create_gmin_struct(DB, gv, time);
     
-    # LibMAGEMin.FreeDatabases(gv, DB);
+    # LibMAGEMin.FreeDatabases(gv, DB, z_b);
 
     return out
 end
