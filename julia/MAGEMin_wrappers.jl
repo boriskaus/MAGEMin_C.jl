@@ -679,6 +679,7 @@ end
 
 """
 struct gmin_struct{T,I}
+    MAGEMin_ver::String
     G_system::T             # G of system
     Gamma::Vector{T}        # Gamma
     P_kbar::T               # Pressure in kbar
@@ -771,7 +772,8 @@ function create_gmin_struct(DB, gv, time)
 
     stb      = unsafe_load(DB.sp)
 
-    G_system = stb.G;
+    MAGEMin_ver = unsafe_string(stb.MAGEMin_ver)
+    G_system = stb.G
     Gamma    = unsafe_wrap(Vector{Cdouble},stb.gamma,gv.len_ox)
     P_kbar   = stb.P
     T_C      = stb.T-273.15 
@@ -848,7 +850,7 @@ function create_gmin_struct(DB, gv, time)
     time_ms         =  time*1000.0
 
     # Store all in output struct 
-    out = gmin_struct{Float64,Int64}( G_system, Gamma, P_kbar, T_C, 
+    out = gmin_struct{Float64,Int64}( MAGEMin_ver, G_system, Gamma, P_kbar, T_C, 
                 bulk, bulk_M, bulk_S, bulk_F,
                 bulk_wt, bulk_M_wt, bulk_S_wt, bulk_F_wt,  
                 frac_M, frac_S, frac_F, 
