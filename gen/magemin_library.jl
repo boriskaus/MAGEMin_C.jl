@@ -578,6 +578,10 @@ mutable struct global_variables
     numPoint::Cint
     global_ite::Cint
     H2O_id::Cint
+    O_id::Cint
+    TiO2_id::Cint
+    Cr2O3_id::Cint
+    MnO_id::Cint
     LVL_time::Cdouble
     em2ss_shift::Cdouble
     bnd_filter_pc::Cdouble
@@ -593,7 +597,6 @@ mutable struct global_variables
     launch_PGE::Cint
     verifyPC::Ptr{Cint}
     n_solvi::Ptr{Cint}
-    id_solvi::Ptr{Ptr{Cint}}
     maxgmTime::Cdouble
     ineq_res::Cdouble
     obj_tol::Cdouble

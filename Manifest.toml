@@ -87,11 +87,11 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.MAGEMin_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "NLopt_jll", "OpenBLAS32_jll", "OpenMPI_jll", "TOML"]
-git-tree-sha1 = "b4593b2a217959ec1b311082d6b833abb3066156"
+git-tree-sha1 = "04fd93a68cda8595418da81bd0e84174e28038b6"
 repo-rev = "main"
 repo-url = "https://github.com/boriskaus/MAGEMin_jll.jl"
 uuid = "763ebaa8-b0d2-5f6b-90ef-4fc23b5db1c4"
-version = "1.4.1+0"
+version = "1.4.0+0"
 
 [[deps.MPICH_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML"]
